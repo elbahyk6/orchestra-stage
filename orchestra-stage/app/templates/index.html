@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ORCHESTRA — Analyse de sécurité</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+
+  <div class="wrapper">
+
+    <!-- Header -->
+    <header>
+      <div class="logo">
+        <div class="logo-icon">OR</div>
+        <div>
+          <div class="logo-name">ORCHESTRA</div>
+          <div class="logo-sub">Security Analysis Platform</div>
+        </div>
+      </div>
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        Système actif
+      </div>
+    </header>
+
+    <!-- présentation -->
+    <div class="hero">
+      <h1>Analyse de sécurité<br/><span>pilotée par agents IA</span></h1>
+      <p>Soumettez une cible — URL, adresse IP ou dépôt Git. ORCHESTRA orchestre automatiquement les outils de sécurité et génère une synthèse via Groq LLaMA 3.3.</p>
+    </div>
+
+    <!-- Scan Form -->
+    <div class="scan-card">
+      <h2>// Nouvelle analyse</h2>
+
+      <div class="type-selector">
+        <button class="type-btn active" onclick="selectType('web', this)">
+          <span class="icon">🌐</span>WEB
+        </button>
+        <button class="type-btn" onclick="selectType('infra', this)">
+          <span class="icon">🖧</span>INFRA
+        </button>
+        <button class="type-btn" onclick="selectType('code', this)">
+          <span class="icon">📁</span>CODE
+        </button>
+      </div>
+
+      <div class="input-row">
+        <input class="target-input" id="targetInput"
+          type="text"
+          placeholder="http://testphp.vulnweb.com"
+          onkeydown="if(event.key==='Enter') lancerScan()"/>
+        <button class="scan-btn" id="scanBtn" onclick="lancerScan()">
+          ▶ SCAN
+        </button>
+      </div>
+
+      <div class="tools-row" id="toolsRow">
+        <div class="tool-badge active"><span class="tool-dot"></span>ZAP</div>
+        <div class="tool-badge active"><span class="tool-dot"></span>NIKTO</div>
+        <div class="tool-badge"><span class="tool-dot"></span>NMAP</div>
+        <div class="tool-badge"><span class="tool-dot"></span>SEMGREP</div>
+        <div class="tool-badge"><span class="tool-dot"></span>GROQ LLaMA 3.3</div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-card" id="progressCard">
+      <div class="progress-header">
+        <span class="progress-label">// Analyse en cours</span>
+        <span class="progress-pct" id="progressPct">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+      <div class="progress-steps" id="progressSteps">
+        <div class="step" id="step1"><span class="step-icon">◎</span>Initialisation des conteneurs Docker</div>
+        <div class="step" id="step2"><span class="step-icon">◎</span>Lancement ZAP — scan vulnérabilités web</div>
+        <div class="step" id="step3"><span class="step-icon">◎</span>Lancement Nikto — audit configuration serveur</div>
+        <div class="step" id="step4"><span class="step-icon">◎</span>Normalisation des résultats JSON</div>
+        <div class="step" id="step5"><span class="step-icon">◎</span>Analyse IA via Groq LLaMA 3.3</div>
+        <div class="step" id="step6"><span class="step-icon">◎</span>Génération du rapport final</div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-card" id="resultsCard">
+      <div class="results-header">
+        <span class="results-title">// Rapport d'analyse</span>
+        <button class="export-btn" onclick="exportJSON()">⬇ Export JSON</button>
+      </div>
+
+      <div class="score-grid">
+        <div class="score-card">
+          <div class="score-num high" id="scoreHigh">0</div>
+          <div class="score-label">Critique</div>
+        </div>
+        <div class="score-card">
+          <div class="score-num medium" id="scoreMedium">0</div>
+          <div class="score-label">Moyen</div>
+        </div>
+        <div class="score-card">
+          <div class="score-num low" id="scoreLow">0</div>
+          <div class="score-label">Faible</div>
+        </div>
+      </div>
+
+      <div class="findings-list" id="findingsList"></div>
+
+      <div class="ai-block">
+        <div class="ai-header">
+          <div class="ai-icon">🤖</div>
+          <div class="ai-label">Synthèse IA — Groq LLaMA 3.3</div>
+        </div>
+        <div class="ai-text" id="aiText"></div>
+      </div>
+    </div>
+
+    <footer>ORCHESTRA v1.0 - </footer>
+  </div>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
