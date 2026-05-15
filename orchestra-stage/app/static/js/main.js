@@ -1,10 +1,10 @@
-// ─────────────────────────────────────────────
+
 // ORCHESTRA — Interface utilisateur
-// ─────────────────────────────────────────────
+
 
 let scanType = 'web';
 
-// ─── 1. CHANGER LE TYPE DE SCAN ───────────────
+// ─── 1. CHANGER LE TYPE DE SCAN 
 function selectType(type, bouton) {
   scanType = type;
 
@@ -23,7 +23,7 @@ function selectType(type, bouton) {
 }
 
 
-// ─── 2. LANCER LE SCAN ────────────────────────
+// ─── 2. LANCER LE SCAN 
 async function lancerScan() {
 
   // Récupérer la cible
@@ -52,7 +52,8 @@ async function lancerScan() {
 
   // Appel au backend FastAPI
   try {
-    var response = await fetch('/analyser?cible=' + encodeURIComponent(cible));
+    var scanner = scanType === 'web' ? 'zap' : 'nikto';
+    var response = await fetch('/analyser?cible=' + encodeURIComponent(cible) + '&scanner=' + encodeURIComponent(scanner));
 
     if (!response.ok) {
       throw new Error('Erreur serveur ' + response.status);
@@ -71,7 +72,7 @@ async function lancerScan() {
 }
 
 
-// ─── 3. SIMULER UNE ÉTAPE ─────────────────────
+// ─── 3. SIMULER UNE ÉTAPE 
 async function etape(numero, pourcentage) {
 
   // Mettre à jour la barre
@@ -97,7 +98,7 @@ async function etape(numero, pourcentage) {
 }
 
 
-// ─── 4. AFFICHER LES RÉSULTATS ────────────────
+// ─── 4. AFFICHER LES RÉSULTATs
 function afficherResultats(data) {
 
   // Récupérer les données du backend
@@ -149,7 +150,7 @@ function afficherResultats(data) {
 }
 
 
-// ─── 5. EXPORT JSON ───────────────────────────
+// ─── 5. EXPORT JSON 
 function exportJSON() {
 
   var data = {
