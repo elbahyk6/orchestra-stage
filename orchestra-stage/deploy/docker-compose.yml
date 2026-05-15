@@ -1,4 +1,5 @@
 services:
+
   backend:
     build:
       context: ../app
@@ -10,3 +11,40 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ../.env
+    depends_on:
+      - zap
+      - nikto
+    networks:
+      - orchestra-net
+
+  zap:
+    image: ghcr.io/zaproxy/zaproxy
+    command: ["zap.sh", "-daemon",
+              "-host", "0.0.0.0",
+              "-port", "8080",
+              "-config", "api.disablekey=true",
+              "-config", "api.addrs.addr.name=.*",
+              "-config", "api.addrs.addr.regex=true"]
+    ports:
+      - "8080:8080"
+    networks:
+      - orchestra-net
+
+  nikto:
+    image: frapsoft/nikto
+    command: ["tail", "-f", "/dev/null"]
+    container_name: orchestra_nikto
+    networks:
+      - orchestra-net
+
+  juiceshop:
+    image: bkimminich/juice-shop
+    container_name: orchestra_juiceshop
+    ports:
+      - "3000:3000"
+    networks:
+      - orchestra-net
+
+networks:
+  orchestra-net:
+    driver: bridge
