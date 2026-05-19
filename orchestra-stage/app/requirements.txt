@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-docker
-requests
-python-dotenv
-groq
-jinja2
-python-multipart
