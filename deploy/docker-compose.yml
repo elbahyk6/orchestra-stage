@@ -1,0 +1,82 @@
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: dockerfiles/Dockerfile.frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - orchestra-net
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ..
+      dockerfile: dockerfiles/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - orchestra_data:/app/data
+    depends_on:
+      zap:
+        condition: service_started
+      nikto:
+        condition: service_started
+    networks:
+      - orchestra-net
+      - tools-net
+    restart: unless-stopped
+
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    command: ["zap.sh", "-daemon",
+              "-host", "0.0.0.0",
+              "-port", "8080",
+              "-config", "api.disablekey=true",
+              "-config", "api.addrs.addr.name=.*",
+              "-config", "api.addrs.addr.regex=true"]
+    networks:
+      - tools-net
+    restart: unless-stopped
+
+  nikto:
+    image: frapsoft/nikto
+    container_name: orchestra_nikto
+    entrypoint: ["tail", "-f", "/dev/null"]
+    networks:
+      - tools-net
+    restart: unless-stopped
+
+  nmap:
+    image: instrumentisto/nmap
+    container_name: orchestra_nmap
+    entrypoint: ["tail", "-f", "/dev/null"]
+    networks:
+      - tools-net
+    restart: unless-stopped
+
+  juiceshop:
+    image: bkimminich/juice-shop
+    container_name: orchestra_juiceshop
+    ports:
+      - "3000:3000"
+    networks:
+      - tools-net
+    restart: unless-stopped
+
+networks:
+  orchestra-net:
+    driver: bridge
+    name: orchestra-net
+
+  tools-net:
+    driver: bridge
+    name: tools-net
+
+volumes:
+  orchestra_data:
