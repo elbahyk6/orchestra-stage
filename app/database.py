@@ -2,6 +2,7 @@ import sqlite3
 import json
 import os
 from datetime import datetime
+from core.encryption import encrypt, decrypt
 
 DB_PATH = os.getenv("DB_PATH", "/app/data/orchestra.db")
 
@@ -50,8 +51,8 @@ def sauvegarder_scan(cible, type_scan, outils, findings, synthese, session_id):
         cible,
         type_scan,
         json.dumps(outils),
-        json.dumps(findings),
-        synthese,
+        encrypt(json.dumps(findings)), # Chiffrement de la chaîne JSON
+        encrypt(synthese),             # Chiffrement de la synthèse
         datetime.now().isoformat(),
         nb_critique,
         nb_moyen,
@@ -105,6 +106,8 @@ def get_historique(limite=10, session_id=None):
 def get_scan_par_id(scan_id, session_id=None):
     """Retourne un scan complet par son ID — vérifie la session"""
     conn = sqlite3.connect(DB_PATH)
+    # Permet d'accéder aux données par nom de colonne (ex: row["findings"])
+    conn.row_factory = sqlite3.Row 
     cursor = conn.cursor()
 
     if session_id:
@@ -122,17 +125,17 @@ def get_scan_par_id(scan_id, session_id=None):
         return None
 
     return {
-        "id":          row[0],
-        "session_id":  row[1],
-        "cible":       row[2],
-        "type_scan":   row[3],
-        "outils":      json.loads(row[4]),
-        "findings":    json.loads(row[5]),
-        "synthese":    row[6],
-        "timestamp":   row[7],
-        "nb_critique": row[8],
-        "nb_moyen":    row[9],
-        "nb_faible":   row[10]
+        "id":          row["id"],
+        "session_id":  row["session_id"],
+        "cible":       row["cible"],
+        "type_scan":   row["type_scan"],
+        "outils":      json.loads(row["outils"]),
+        "findings":    json.loads(decrypt(row["findings"])), # Déchiffrement + Parse JSON
+        "synthese":    decrypt(row["synthese"]),             # Déchiffrement
+        "timestamp":   row["timestamp"],
+        "nb_critique": row["nb_critique"],
+        "nb_moyen":    row["nb_moyen"],
+        "nb_faible":   row["nb_faible"]
     }
 
 

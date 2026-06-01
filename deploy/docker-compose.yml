@@ -5,11 +5,19 @@ services:
       dockerfile: dockerfiles/Dockerfile.frontend
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - ../certs:/etc/nginx/certs:ro
     depends_on:
       - backend
     networks:
       - orchestra-net
     restart: unless-stopped
+    # --- AJOUT SÉCURITÉ FRONTEND ---
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    cpus: 0.5
 
   backend:
     build:
@@ -20,7 +28,7 @@ services:
     env_file:
       - ../.env
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock # Sensible : donne accès root à l'hôte !
       - orchestra_data:/app/data
     depends_on:
       zap:
@@ -31,6 +39,11 @@ services:
       - orchestra-net
       - tools-net
     restart: unless-stopped
+    # --- AJOUT SÉCURITÉ BACKEND ---
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1g # Limite pour éviter les DoS par surconsommation de l'IA/Parser
+    cpus: 1.0
 
   zap:
     image: ghcr.io/zaproxy/zaproxy:stable
@@ -43,6 +56,18 @@ services:
     networks:
       - tools-net
     restart: unless-stopped
+    # --- AJOUT SANDBOX ZAP ---
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    user: "1000:1000" # Exécution en utilisateur non-root
+    tmpfs:
+      - /home/zap/.ZAP:uid=1000,gid=1000,mode=1777 # Dossier de conf temporaire de ZAP
+      - /tmp:uid=1000,gid=1000,mode=1777
+    mem_limit: 2g # ZAP (Java) consomme beaucoup de RAM
+    cpus: 1.5
 
   nikto:
     image: frapsoft/nikto
@@ -51,6 +76,16 @@ services:
     networks:
       - tools-net
     restart: unless-stopped
+    # --- AJOUT SANDBOX NIKTO ---
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:mode=1777
+    mem_limit: 256m
+    cpus: 0.5
 
   nmap:
     image: instrumentisto/nmap
@@ -59,6 +94,18 @@ services:
     networks:
       - tools-net
     restart: unless-stopped
+    # --- AJOUT SANDBOX NMAP ---
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW # CRITIQUE : Nmap en a absolument besoin pour le scan de services
+    tmpfs:
+      - /tmp:mode=1777
+    mem_limit: 256m
+    cpus: 0.5
 
   juiceshop:
     image: bkimminich/juice-shop
@@ -68,6 +115,14 @@ services:
     networks:
       - tools-net
     restart: unless-stopped
+    # --- AJOUT SÉCURITÉ JUICESHOP CORRIGÉ ---
+    read_only: false # Désactivé pour permettre à Node.js d'écrire et de démarrer sans crasher
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    cpus: 0.5
 
 networks:
   orchestra-net:
